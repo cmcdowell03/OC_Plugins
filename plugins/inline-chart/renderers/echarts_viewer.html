@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inline Chart Viewer</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0f14;
+      --panel: #121820;
+      --fg: #e7ecf3;
+      --muted: #8b98a8;
+      --accent: #3d8bfd;
+      --border: #243041;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+    header h1 {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0;
+      flex: 1;
+    }
+    header .meta { color: var(--muted); font-size: 12px; }
+    header button {
+      background: #1a2433;
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    header button:hover { border-color: var(--accent); }
+    #chart {
+      flex: 1;
+      width: 100%;
+      min-height: 420px;
+    }
+    .empty {
+      margin: auto;
+      color: var(--muted);
+      padding: 40px;
+      text-align: center;
+    }
+    .chat-bubble {
+      margin: 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--panel);
+      box-shadow: 0 8px 30px rgba(0,0,0,.35);
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-bubble">
+    <header>
+      <h1 id="title">Inline Chart</h1>
+      <span class="meta" id="meta"></span>
+      <button type="button" id="btn-png">Export PNG</button>
+      <button type="button" id="btn-svg">Export SVG</button>
+      <button type="button" id="btn-json">Copy Spec</button>
+    </header>
+    <div id="chart"></div>
+    <div class="empty" id="empty" hidden>Paste a chart envelope JSON or load via <code>?envelope=...</code> / postMessage.</div>
+  </div>
+
+  <script>
+    const chartEl = document.getElementById('chart');
+    const emptyEl = document.getElementById('empty');
+    const titleEl = document.getElementById('title');
+    const metaEl = document.getElementById('meta');
+    let chart = echarts.init(chartEl, null, { renderer: 'canvas' });
+    let lastEnvelope = null;
+
+    function applyEnvelope(envelope) {
+      lastEnvelope = envelope;
+      if (!envelope || envelope.type !== 'chart' || !envelope.spec || !Object.keys(envelope.spec).length) {
+        emptyEl.hidden = false;
+        return;
+      }
+      emptyEl.hidden = true;
+      const spec = { ...envelope.spec };
+      // Height hint from builder
+      const h = spec._height || (envelope.meta && envelope.meta.height) || 420;
+      delete spec._height;
+      chartEl.style.height = h + 'px';
+      chart.resize();
+      chart.setOption(spec, true);
+
+      const t = (envelope.meta && envelope.meta.title) || (spec.title && spec.title.text) || 'Inline Chart';
+      titleEl.textContent = t;
+      const n = envelope.meta && envelope.meta.data_points;
+      const r = envelope.renderer || 'echarts';
+      metaEl.textContent = `${r} · ${n != null ? n + ' pts' : ''} · ${envelope.interactive ? 'interactive' : 'static'}`.trim();
+    }
+
+    // postMessage API for host apps
+    window.addEventListener('message', (ev) => {
+      const data = ev.data;
+      if (!data) return;
+      if (data.type === 'chart' || (data.envelope && data.envelope.type === 'chart')) {
+        applyEnvelope(data.type === 'chart' ? data : data.envelope);
+      }
+      if (data.type === 'set_option' && data.option) {
+        chart.setOption(data.option, !!data.replace);
+      }
+    });
+
+    // Query param: ?demo=1 or load from window.CHART_ENVELOPE
+    async function boot() {
+      const params = new URLSearchParams(location.search);
+      if (window.CHART_ENVELOPE) {
+        applyEnvelope(window.CHART_ENVELOPE);
+        return;
+      }
+      if (params.get('demo') === '1') {
+        // Minimal demo if host did not inject data
+        applyEnvelope({
+          type: 'chart',
+          renderer: 'echarts',
+          interactive: true,
+          meta: { title: 'Demo', data_points: 4 },
+          spec: {
+            backgroundColor: '#0f1419',
+            title: { text: 'Demo series', left: 'center', textStyle: { color: '#e7ecf3' } },
+            xAxis: { type: 'category', data: ['A', 'B', 'C', 'D'] },
+            yAxis: { type: 'value' },
+            series: [{ type: 'line', data: [3, 5, 2, 8], smooth: true, areaStyle: {} }],
+            tooltip: { trigger: 'axis' },
+          },
+        });
+        return;
+      }
+      emptyEl.hidden = false;
+    }
+
+    document.getElementById('btn-png').onclick = () => {
+      const url = chart.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#0f1419' });
+      const a = document.createElement('a');
+      a.href = url; a.download = 'chart.png'; a.click();
+    };
+    document.getElementById('btn-svg').onclick = () => {
+      // switch briefly if needed — canvas build may not support svg; use dataURL png fallback note
+      alert('SVG export is best with renderer: svg init. Use Copy Spec + external export for now.');
+    };
+    document.getElementById('btn-json').onclick = async () => {
+      if (!lastEnvelope) return;
+      await navigator.clipboard.writeText(JSON.stringify(lastEnvelope, null, 2));
+      metaEl.textContent = 'spec copied';
+    };
+
+    window.addEventListener('resize', () => chart.resize());
+    // Click → host callback (drill-down)
+    chart.on('click', (params) => {
+      const payload = {
+        type: 'chart_click',
+        name: params.name,
+        seriesName: params.seriesName,
+        value: params.value,
+        dataIndex: params.dataIndex,
+      };
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage(payload, '*');
+      }
+      console.log('chart_click', payload);
+    });
+
+    boot();
+  </script>
+</body>
+</html>

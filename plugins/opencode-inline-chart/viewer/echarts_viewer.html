@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenCode Chart Viewer</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+  <style>
+    body { margin: 0; background: #0b0f14; color: #e7ecf3; font-family: system-ui, sans-serif; }
+    header { padding: 10px 14px; border-bottom: 1px solid #243041; display: flex; gap: 12px; align-items: center; }
+    h1 { font-size: 14px; margin: 0; flex: 1; }
+    #chart { width: 100vw; height: calc(100vh - 48px); }
+    button { background: #1a2433; color: #e7ecf3; border: 1px solid #243041; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="title">OpenCode Chart</h1>
+    <button id="png">Export PNG</button>
+  </header>
+  <div id="chart"></div>
+  <script>
+    const chart = echarts.init(document.getElementById('chart'));
+    function apply(env) {
+      if (!env || !env.spec) return;
+      const spec = { ...env.spec }; delete spec._height;
+      chart.setOption(spec, true);
+      document.getElementById('title').textContent = (env.meta && env.meta.title) || 'Chart';
+    }
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'chart') apply(e.data);
+      if (e.data && e.data.envelope) apply(e.data.envelope);
+    });
+    if (window.CHART_ENVELOPE) apply(window.CHART_ENVELOPE);
+    document.getElementById('png').onclick = () => {
+      const a = document.createElement('a');
+      a.href = chart.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#0b0f14' });
+      a.download = 'chart.png'; a.click();
+    };
+    window.addEventListener('resize', () => chart.resize());
+  </script>
+</body>
+</html>

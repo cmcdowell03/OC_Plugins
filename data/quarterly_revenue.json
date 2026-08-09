@@ -1,0 +1,28 @@
+{
+  "description": "Demo quarterly revenue series for create_inline_chart",
+  "chart_type": "line",
+  "title": "Quarterly revenue with 3-period MA + Q3-24 spike",
+  "x_field": "quarter",
+  "y_field": "revenue",
+  "data": [
+    { "quarter": "Q1-23", "revenue": 4.2 },
+    { "quarter": "Q2-23", "revenue": 4.8 },
+    { "quarter": "Q3-23", "revenue": 7.1 },
+    { "quarter": "Q4-23", "revenue": 5.0 },
+    { "quarter": "Q1-24", "revenue": 5.4 },
+    { "quarter": "Q2-24", "revenue": 5.9 },
+    { "quarter": "Q3-24", "revenue": 9.2 },
+    { "quarter": "Q4-24", "revenue": 6.3 }
+  ],
+  "options": {
+    "theme": "dark",
+    "moving_average": 3,
+    "annotations": [{ "x": "Q3-24", "label": "Q3-24 spike" }],
+    "show_legend": true,
+    "height": 360
+  },
+  "notes": {
+    "ma": "3-period MA on quarterly points (not monthly)",
+    "tool": "create_inline_chart"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "code-improver",
+  "version": "0.1.0",
+  "description": "Iteratively improve a module for performance, clarity, and tests using session-chained OpenCode runs.",
+  "author": "OC_Plugins",
+  "agents": [
+    {
+      "name": "code-improver",
+      "mode": "primary",
+      "promptFile": "prompts/system.md"
+    }
+  ],
+  "loop": {
+    "completionMarker": "TASK_COMPLETE",
+    "recommendedMaxIter": 10,
+    "supportsAttach": true,
+    "supportsSessionContinue": true
+  },
+  "permissions": {
+    "notes": "Needs read/write on the target repo, ability to run tests, and git status (optional)."
+  }
+}

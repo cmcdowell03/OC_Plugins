@@ -1,0 +1,22 @@
+{
+  "name": "my-plugin",
+  "version": "0.1.0",
+  "description": "Short description of what this OpenCode plugin does.",
+  "author": "",
+  "agents": [
+    {
+      "name": "my-plugin-agent",
+      "mode": "primary",
+      "promptFile": "prompts/system.md"
+    }
+  ],
+  "loop": {
+    "completionMarker": "TASK_COMPLETE",
+    "recommendedMaxIter": 10,
+    "supportsAttach": true,
+    "supportsSessionContinue": true
+  },
+  "permissions": {
+    "notes": "Document required tools/permissions for this agent."
+  }
+}

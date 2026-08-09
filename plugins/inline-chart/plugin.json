@@ -1,0 +1,35 @@
+{
+  "name": "inline-chart",
+  "version": "0.1.0",
+  "description": "Render interactive charts inline in chat via create_inline_chart. Declarative ECharts/Vega-Lite specs; TUI ASCII fallback.",
+  "author": "OC_Plugins",
+  "tools": [
+    {
+      "name": "create_inline_chart",
+      "schemaFile": "schemas/create_inline_chart.json",
+      "description": "Render an interactive chart directly inside the chat. Preferred over code blocks or static images for any visualization request."
+    }
+  ],
+  "agents": [
+    {
+      "name": "chart-agent",
+      "mode": "subagent",
+      "promptFile": "prompts/system.md"
+    }
+  ],
+  "renderers": {
+    "chart": {
+      "web": "renderers/echarts_viewer.html",
+      "tui": "src/ascii_chart.py",
+      "envelopeType": "chart"
+    }
+  },
+  "loop": {
+    "completionMarker": "TASK_COMPLETE",
+    "supportsAttach": true,
+    "supportsSessionContinue": true
+  },
+  "permissions": {
+    "notes": "Read-only over data files by default. No arbitrary code execution in preferred declarative mode."
+  }
+}

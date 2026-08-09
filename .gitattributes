@@ -1,0 +1,20 @@
+* text=auto eol=lf
+
+# Portable shell entry points must use LF.
+*.sh text eol=lf
+*.bash text eol=lf
+*.zsh text eol=lf
+
+# Keep Windows-native launchers conventional.
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Never normalize binary assets.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary

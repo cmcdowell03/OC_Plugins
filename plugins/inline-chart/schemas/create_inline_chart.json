@@ -1,0 +1,55 @@
+{
+  "name": "create_inline_chart",
+  "description": "Render an interactive chart directly inside the chat. Preferred over code blocks or static images for any visualization request.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "chart_type": {
+        "type": "string",
+        "enum": [
+          "line",
+          "bar",
+          "scatter",
+          "pie",
+          "area",
+          "heatmap",
+          "candlestick",
+          "boxplot"
+        ]
+      },
+      "title": { "type": "string" },
+      "data": {
+        "type": "array",
+        "items": { "type": "object" },
+        "description": "Data points. Can be flat objects or use x_field/y_field for flexibility."
+      },
+      "x_field": { "type": "string" },
+      "y_field": { "type": "string" },
+      "series_field": {
+        "type": "string",
+        "description": "Column for multi-series grouping"
+      },
+      "options": {
+        "type": "object",
+        "properties": {
+          "show_trendline": { "type": "boolean" },
+          "show_legend": { "type": "boolean", "default": true },
+          "interactive": { "type": "boolean", "default": true },
+          "theme": { "type": "string", "enum": ["dark", "light"] },
+          "annotations": { "type": "array" },
+          "height": { "type": "number", "default": 420 },
+          "moving_average": {
+            "type": "integer",
+            "description": "If set, add an N-period moving average series (line/area)."
+          },
+          "renderer": {
+            "type": "string",
+            "enum": ["echarts", "vega-lite"],
+            "default": "echarts"
+          }
+        }
+      }
+    },
+    "required": ["chart_type", "data"]
+  }
+}
